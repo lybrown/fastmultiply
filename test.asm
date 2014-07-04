@@ -7,6 +7,7 @@ result1 org *+4
 result2 org *+4
 result3 org *+4
 result4 org *+4
+result5 org *+4
 
     org $2000
     icl 'table.asm'
@@ -32,14 +33,21 @@ main
     sec
     jsr multiply_16x8bit_signed
     mwa PRODUCT result3
-    mwa PRODUCT+2 result3+2
-    ; result3 should be $FFFC5FA4
+    mva PRODUCT+2 result3+2
+    ; result3 should be $FC5FA4
     mwa #$1234 T1
     mwa #$ABCD T2
     sec
     jsr multiply_8x16bit_signed
     mwa PRODUCT result4
-    mwa PRODUCT+2 result4+2
-    ; result4 should be $FFEEE5A4
+    mva PRODUCT+2 result4+2
+    ; result4 should be $EEE5A4
+    mwa #$1234 T1
+    mwa #$56 T2
+    sec
+    jsr multiply_16x8bit_signed
+    mwa PRODUCT result5
+    mva PRODUCT+2 result5+2
+    ; result5 should be $061D78
     brk
     run main
