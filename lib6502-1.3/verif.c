@@ -466,6 +466,7 @@ static int doDisassemble(int argc, char **argv, M6502 *mpu)
 
 signed short a;
 signed char b;
+unsigned char c;
 
 static int vTrap1(M6502 *mpu, word addr, byte data)
 {
@@ -494,6 +495,30 @@ static int vTrap1(M6502 *mpu, word addr, byte data)
 static int vTrap2(M6502 *mpu, word addr, byte data)
 {
   int p = mpu->memory[0x84] | (mpu->memory[0x85] << 8) | (mpu->memory[0x86] << 16);
+  int correct = (a * c) & 0xFFFFFF;
+  if (p != correct) {
+    printf("ERROR: Mismatch a=%04X c=%02X p=%06X correct=%06X\n",
+        a & 0xFFFF, c & 0xFF, p & 0xFFFFFF, correct);
+  }
+  c += 1;
+  mpu->memory[0x82] = c;
+  mpu->registers->p |= 1;
+  if (!c) {
+    a += 1;
+    if (!a) {
+      printf("INFO: All s16u8 match!\n");
+      fflush(stdout);
+      mpu->registers->p &= 0xFE;
+    }
+    mpu->memory[0x80] = a & 0xFF;
+    mpu->memory[0x81] = a >> 8;
+  }
+  rts;
+}
+
+static int vTrap3(M6502 *mpu, word addr, byte data)
+{
+  int p = mpu->memory[0x84] | (mpu->memory[0x85] << 8) | (mpu->memory[0x86] << 16);
   int correct = (a * b) & 0xFFFFFF;
   if (p != correct) {
     printf("ERROR: Mismatch a=%04X b=%02X p=%06X correct=%06X\n",
@@ -507,6 +532,7 @@ static int vTrap2(M6502 *mpu, word addr, byte data)
     if (!a) {
       printf("INFO: All 8x16 match!\n");
       fflush(stdout);
+      mpu->registers->p &= 0xFE;
       exit(0);
     }
     mpu->memory[0x82] = a & 0xFF;
@@ -568,9 +594,10 @@ int main(int argc, char **argv)
   if (bTraps)
     doBtraps(0, 0, mpu);
 
-  a = b = 0;
+  a = b = c = 0;
   M6502_setCallback(mpu, call, 0x8000, vTrap1);
   M6502_setCallback(mpu, call, 0x8001, vTrap2);
+  M6502_setCallback(mpu, call, 0x8002, vTrap3);
 
   printf("INFO: Reset...\n");
   M6502_reset(mpu);
