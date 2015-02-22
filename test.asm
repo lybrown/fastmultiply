@@ -11,7 +11,10 @@ result5 org *+4
 
     org $2000
     icl 'table.asm'
-    icl 'fastmultiply.asm'
+    icl 'mult8x8.asm'
+    icl 'mult16x16.asm'
+    icl 'mult16x8.asm'
+    icl 'mult8x16.asm'
 main
     jsr generate_square_tables
     mwa #$1234 T1
